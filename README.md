@@ -10,10 +10,12 @@
 ### 2. 데이터 설명
 
 게임 내에서의 여러가지 요소를 파악한 한국 유저들의 게임데이터를 kaggle에서 받아서 활용
+
 (출처 : https://www.kaggle.com/park123/lol-data)	
 
 
   결측치, 이상치 없음.
+  
 
 - 데이터 전처리
 
@@ -80,5 +82,96 @@ match2.drop('red_gold', axis = 1,inplace = True)
 match2.drop('gameDuration', axis = 1,inplace = True)
 
 ```
+
+### 3. 머신러닝 모델 적용
+
+전처리한 데이터를 바탕으로 KNN / bernouilliNB / decision tree / Riper / decision tree + bagging /  randomForest 총 6가지 머신러닝 모델에 적용하여 결론을 도출
+
+```py
+
+# by 건우, 21/10/01, decision tree + bagging
+
+
+from sklearn.preprocessing import MinMaxScaler
+
+match3 = match2.iloc[     :    ,   :-1   ]        # 정답컬럼제외
+
+scaler = MinMaxScaler()
+
+scaler.fit(match3)                   # 최대 최소법으로 데이터를 계산합니다.
+
+match_scaled = scaler.transform( match3 )            # 위에서 계산한 내용으로 데이터를 변환해서 match_scaled 담습니다.
+# print(match_scaled)
+
+# print ( match_scaled.shape )         # ( 5000, 28 )
+
+y = match2['b_win'].to_numpy()        # 정답 데이터를 numpy array 로 변경합니다.
+# print(y)
+
+
+# 훈련데이터와 테스트데이터로 분리합니다. ( 훈련 90% , 테스트 10% )
+
+from sklearn.model_selection import train_test_split
+
+x_train , x_test, y_train, y_test = train_test_split( match_scaled, y, test_size = 0.1 , random_state = 1 )    
+
+# print( x_train.shape )      # (4500, 28)
+# print( x_test.shape )         # (500, 28)
+# print( y_train.shape )         # (4500,)
+# print( y_test.shape )          # (500,)
+
+
+for i in range(1,101):              # random_state 값을 변화
+
+    
+    from sklearn.tree import DecisionTreeClassifier
+    
+    model = DecisionTreeClassifier( criterion = 'entropy', max_depth = 20, random_state =1 )
+    
+    from sklearn.ensemble import BaggingClassifier
+    
+    bagging = BaggingClassifier( model, max_samples = 0.9, max_features = 0.5, random_state = i )
+    
+    # 설명 : max_samples = 0.9 는 bag 에 데이터 담을때 훈련 데이터의 90% 를 샘플링하겠다.
+    #             max_features = 0.5 하나의 예측기가 가져갈 수 있는 최대 컬럼의 갯수
+    
+    # 모델훈련
+    bagging.fit( x_train, y_train )
+    
+    # 모델 예측
+    result = bagging.predict( x_test )
+    
+    #모델평가
+    
+    accuracy = sum(result == y_test) / len(y_test)
+    if accuracy >= 0.98:
+        print('random_state : ', i , 'accuracy : ', accuracy )
+
+```
+
+
+### 4. 결과 
+
+- 건물 지표 비교
+
+블루팀의 타워가 많이 깨지면 질 확률이 가장 높았고, 그 다음 블루팀의 승리에 가장 큰 영향을 끼치는 요인은 레드팀의 깨진 타워수이다. 예상외로 킬수와 억제기가 깨진 수는 타워가 깨진 수보다 영향력이 덜했다.
+
+- 몬스터 포획 지표 비교
+
+승리에 가장 영향을 미치는 몬스터는 바론과 전령이였고, 드래곤 4종류 중에서는 물 > 대지 > 불 > 바람 순으로 큰 영향을 미친다.
+장로드래곤이 가장 큰 영향을 미칠것이라는 예상과 달리 가장 낮았다. 이는 장로 드래곤을 잡은 데이터 표본 수 자체가 적기 때문에 나온 결과라고 예상된다.
+
+- 첫번째 지표 비교
+
+블루팀의 첫번째 억제기가 깨졌을 때 가장 승리에 영향을 미쳤고, 그 다음은 첫번째 타워가 큰 영향을 미쳤다.
+첫번째 킬, 용, 전령은 상대적으로 게임 결과에 큰 영향이 없었다.
+
+
+
+
+
+
+
+
 
 
