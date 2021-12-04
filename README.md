@@ -25,7 +25,7 @@ True, False 로 표현된 6가지 컬럼의 값들은 0또는 1로 변경
 
 여러가지 몬스터로 적혀있는 7가지 몬스터를 잡았는지 안잡았느지 유무에 따라 14개의 컬럼을 추가
 
-'''py
+```py
 # 1. 'matchId' , 'makeTime' 컬럼 제거
 
 import pandas as pd
@@ -79,4 +79,6 @@ match2.drop('blue_gold', axis = 1,inplace = True)
 match2.drop('red_gold', axis = 1,inplace = True)
 match2.drop('gameDuration', axis = 1,inplace = True)
 
-'''
+```
+
+
